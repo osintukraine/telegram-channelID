@@ -1,4 +1,5 @@
 telethon
 python-dotenv
 colorlog
+pandas
 git+https://github.com/NiklasRosenstein/python-baserow-client.git
