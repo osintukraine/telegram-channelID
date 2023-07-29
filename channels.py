@@ -40,7 +40,7 @@ logger.addHandler(handler)
 
 client = TelegramClient('session_name', api_id, api_hash)
 
-async def main(input_file):
+async def fetch_channels():
     logger.info('Starting the client...')
     await client.start(phone)
     logger.info('Client started.')
@@ -63,19 +63,42 @@ async def main(input_file):
     data.sort()  # Sort by channel name
 
     df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
+    df.to_csv('channel_info.csv', index=False)
+    logger.info('Data written to channel_info.csv')
 
-    if input_file:
-        logger.info(f'Reading input file: {input_file}')
-        input_df = pd.read_csv(input_file)
-        df = pd.merge(input_df, df, on=["Channel Name", "Channel Link"], how='left')
+async def parse_file(input_file):
+    logger.info('Starting the client...')
+    await client.start(phone)
+    logger.info('Client started.')
 
+    logger.info(f'Reading input file: {input_file}')
+    input_df = pd.read_csv(input_file)
+
+    data = []
+    for _, row in input_df.iterrows():
+        channel_link = row['Channel Link']
+        channel_name = row['Channel Name']
+        logger.info(f'Processing channel: {channel_name}')
+        channel_entity = await client.get_entity(channel_link)
+        full_channel = await client(GetFullChannelRequest(channel_entity))
+        followers = full_channel.full_chat.participants_count
+        chat_id = channel_entity.id
+        data.append((channel_name, channel_link, followers, chat_id))
+
+    df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
     df.to_csv('channel_info.csv', index=False)
     logger.info('Data written to channel_info.csv')
 
 parser = argparse.ArgumentParser(description='Fetch Telegram channel IDs.')
+parser.add_argument('--mode', choices=['fetch', 'parse'], required=True, help='The operation mode.')
 parser.add_argument('--input_file', help='An input CSV file with channel names and links.')
 
 args = parser.parse_args()
 
 with client:
-    client.loop.run_until_complete(main(args.input_file))
+    if args.mode == 'fetch':
+        client.loop.run_until_complete(fetch_channels())
+    elif args.mode == 'parse':
+        if args.input_file is None:
+            raise ValueError('The --input_file argument is required in parse mode.')
+        client.loop.run_until_complete(parse_file(args.input_file))
