@@ -1,0 +1,4 @@
+telethon
+python-dotenv
+colorlog
+git+https://github.com/NiklasRosenstein/python-baserow-client.git
