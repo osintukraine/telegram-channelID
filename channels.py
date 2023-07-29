@@ -40,7 +40,7 @@ logger.addHandler(handler)
 
 client = TelegramClient('session_name', api_id, api_hash)
 
-async def fetch_channels():
+async def fetch_channels(output_file):
     logger.info('Starting the client...')
     await client.start(phone)
     logger.info('Client started.')
@@ -63,10 +63,10 @@ async def fetch_channels():
     data.sort()  # Sort by channel name
 
     df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
-    df.to_csv('channel_info.csv', index=False)
-    logger.info('Data written to channel_info.csv')
+    df.to_csv(output_file, index=False)
+    logger.info(f'Data written to {output_file}')
 
-async def parse_file(input_file):
+async def parse_file(input_file, output_file):
     logger.info('Starting the client...')
     await client.start(phone)
     logger.info('Client started.')
@@ -86,19 +86,20 @@ async def parse_file(input_file):
         data.append((channel_name, channel_link, followers, chat_id))
 
     df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
-    df.to_csv('channel_info.csv', index=False)
-    logger.info('Data written to channel_info.csv')
+    df.to_csv(output_file, index=False)
+    logger.info(f'Data written to {output_file}')
 
 parser = argparse.ArgumentParser(description='Fetch Telegram channel IDs.')
 parser.add_argument('--mode', choices=['fetch', 'parse'], required=True, help='The operation mode.')
 parser.add_argument('--input_file', help='An input CSV file with channel names and links.')
+parser.add_argument('--output_file', default='channel_info.csv', help='The output CSV file.')
 
 args = parser.parse_args()
 
 with client:
     if args.mode == 'fetch':
-        client.loop.run_until_complete(fetch_channels())
+        client.loop.run_until_complete(fetch_channels(args.output_file))
     elif args.mode == 'parse':
         if args.input_file is None:
             raise ValueError('The --input_file argument is required in parse mode.')
-        client.loop.run_until_complete(parse_file(args.input_file))
+        client.loop.run_until_complete(parse_file(args.input_file, args.output_file))
