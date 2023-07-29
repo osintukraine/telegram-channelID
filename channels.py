@@ -1,5 +1,7 @@
 import os
 import csv
+import argparse
+import pandas as pd
 from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
@@ -38,7 +40,7 @@ logger.addHandler(handler)
 
 client = TelegramClient('session_name', api_id, api_hash)
 
-async def main():
+async def main(input_file):
     logger.info('Starting the client...')
     await client.start(phone)
     logger.info('Client started.')
@@ -60,12 +62,20 @@ async def main():
     
     data.sort()  # Sort by channel name
 
-    with open('channel_info.csv', 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["Channel Name", "Channel Link", "Followers", "Chat ID"])
-        writer.writerows(data)
+    df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
 
+    if input_file:
+        logger.info(f'Reading input file: {input_file}')
+        input_df = pd.read_csv(input_file)
+        df = pd.merge(input_df, df, on=["Channel Name", "Channel Link"], how='left')
+
+    df.to_csv('channel_info.csv', index=False)
     logger.info('Data written to channel_info.csv')
 
+parser = argparse.ArgumentParser(description='Fetch Telegram channel IDs.')
+parser.add_argument('--input_file', help='An input CSV file with channel names and links.')
+
+args = parser.parse_args()
+
 with client:
-    client.loop.run_until_complete(main())
+    client.loop.run_until_complete(main(args.input_file))
