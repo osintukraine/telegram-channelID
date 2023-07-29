@@ -1,6 +1,6 @@
 # telegram-channelID
 - a python script to retrieve subscribed channel ID's from your telegram account and export the list to CSV
-- python channels.py --input_file input.csv to retrieve the channel ID's from a local CSV file with missing channel ID's
+- retrieve the channel ID's from a local CSV file with missing channel ID's
 
 
 # How to use : 
@@ -12,3 +12,6 @@
 - add phone number and confirm code to create you session file
 - wait for the code to finish the job (it can take a while if you have many channels)
 - you should end up with a CSV file of all your subscribed channels ID's
+
+## load a local CSV file with missing ID's
+- python3 channels.py --input_file input.csv
