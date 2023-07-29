@@ -1,5 +1,7 @@
 import os
 import csv
+import argparse
+import pandas as pd
 from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
@@ -38,7 +40,7 @@ logger.addHandler(handler)
 
 client = TelegramClient('session_name', api_id, api_hash)
 
-async def main():
+async def fetch_channels(output_file):
     logger.info('Starting the client...')
     await client.start(phone)
     logger.info('Client started.')
@@ -60,12 +62,44 @@ async def main():
     
     data.sort()  # Sort by channel name
 
-    with open('channel_info.csv', 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["Channel Name", "Channel Link", "Followers", "Chat ID"])
-        writer.writerows(data)
+    df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
+    df.to_csv(output_file, index=False)
+    logger.info(f'Data written to {output_file}')
 
-    logger.info('Data written to channel_info.csv')
+async def parse_file(input_file, output_file):
+    logger.info('Starting the client...')
+    await client.start(phone)
+    logger.info('Client started.')
+
+    logger.info(f'Reading input file: {input_file}')
+    input_df = pd.read_csv(input_file)
+
+    data = []
+    for _, row in input_df.iterrows():
+        channel_link = row['Channel Link']
+        channel_name = row['Channel Name']
+        logger.info(f'Processing channel: {channel_name}')
+        channel_entity = await client.get_entity(channel_link)
+        full_channel = await client(GetFullChannelRequest(channel_entity))
+        followers = full_channel.full_chat.participants_count
+        chat_id = channel_entity.id
+        data.append((channel_name, channel_link, followers, chat_id))
+
+    df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
+    df.to_csv(output_file, index=False)
+    logger.info(f'Data written to {output_file}')
+
+parser = argparse.ArgumentParser(description='Fetch Telegram channel IDs.')
+parser.add_argument('--mode', choices=['fetch', 'parse'], required=True, help='The operation mode.')
+parser.add_argument('--input_file', help='An input CSV file with channel names and links.')
+parser.add_argument('--output_file', default='channel_info.csv', help='The output CSV file.')
+
+args = parser.parse_args()
 
 with client:
-    client.loop.run_until_complete(main())
+    if args.mode == 'fetch':
+        client.loop.run_until_complete(fetch_channels(args.output_file))
+    elif args.mode == 'parse':
+        if args.input_file is None:
+            raise ValueError('The --input_file argument is required in parse mode.')
+        client.loop.run_until_complete(parse_file(args.input_file, args.output_file))
