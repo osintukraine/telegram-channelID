@@ -29,4 +29,10 @@ async def main():
     
     data.sort()  # Sort by channel name
 
-    with open('channel_info.csv', 'w', newline='') as file
+    with open('channel_info.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Channel Name", "Channel Link", "Followers", "Chat ID"])
+        writer.writerows(data)
+
+with client:
+    client.loop.run_until_complete(main())
