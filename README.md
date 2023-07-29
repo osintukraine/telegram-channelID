@@ -4,8 +4,8 @@
 
 ## TLDR
 
-python channels.py --mode fetch --output_file output_fetch.csv
-python channels.py --mode parse --input_file input.csv --output_file output_parse.csv
+- python channels.py --mode fetch --output_file output_fetch.csv
+- python channels.py --mode parse --input_file input.csv --output_file output_parse.csv
 
 
 
