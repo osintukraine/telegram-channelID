@@ -79,11 +79,14 @@ async def parse_file(input_file, output_file):
         channel_link = row['Channel Link']
         channel_name = row['Channel Name']
         logger.info(f'Processing channel: {channel_name}')
-        channel_entity = await client.get_entity(channel_link)
-        full_channel = await client(GetFullChannelRequest(channel_entity))
-        followers = full_channel.full_chat.participants_count
-        chat_id = channel_entity.id
-        data.append((channel_name, channel_link, followers, chat_id))
+        try:
+            channel_entity = await client.get_entity(channel_link)
+            full_channel = await client(GetFullChannelRequest(channel_entity))
+            followers = full_channel.full_chat.participants_count
+            chat_id = channel_entity.id
+            data.append((channel_name, channel_link, followers, chat_id))
+        except ValueError:
+            logger.error(f'Cannot find any entity corresponding to "{channel_link}". Skipping...')
 
     df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
     df.to_csv(output_file, index=False)
