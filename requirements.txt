@@ -2,3 +2,5 @@ telethon
 python-dotenv
 colorlog
 pandas
+json
+requests
