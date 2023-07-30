@@ -40,7 +40,20 @@ formatter = colorlog.ColoredFormatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-client = TelegramClient('session_name', api_id, api_hash)
+
+# Define your session file name
+session_file = 'my_session'
+
+# Create the client
+client = TelegramClient(session_file, api_id, api_hash)
+
+# Check if the session file exists
+if not os.path.exists(session_file + '.session'):
+    # If the session file doesn't exist, start the client with authentication
+    client.start(phone, password)
+else:
+    # If the session file exists, start the client without authentication
+    client.start()
 
 async def fetch_channels(output_file):
     logger.info('Starting the client...')
