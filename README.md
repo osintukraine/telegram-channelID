@@ -24,4 +24,13 @@
 ## load a local CSV file with missing ID's
 - run : python channels.py --mode parse --input_file input.csv --output_file output_parse.csv
 
-## rebase
+## OPML use case mode
+this usecase is designed for a very specific situation, the use of Inoreader to aggregate Telegram channels
+on this usecase, the user end up with a folder from witch an OPML link can be used to extract Chat ID's from each telegram channel link. 
+for this to work, the user need to enable the RSS output for this folder property and then use the Inoreader provided OPML link as input source. 
+
+- python opml.py --mode opml --input_file https://www.inoreader.com/reader/subscriptions/export/user/1005520529/label/Telegram-ampukr --output_file output.csv
+
+the result will be a CSV file with the Telegram Channel Name, Link and Chat ID. 
+
+
