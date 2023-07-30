@@ -41,33 +41,7 @@ logger.addHandler(handler)
 
 client = TelegramClient('session_name', api_id, api_hash)
 
-async def fetch_channels(output_file):
-    logger.info('Starting the client...')
-    await client.start(phone)
-    logger.info('Client started.')
-
-    logger.info('Getting dialogs...')
-    dialogs = await client.get_dialogs()
-    logger.info('Dialogs retrieved.')
-
-    channels = [entity for entity in dialogs if isinstance(entity.entity, Channel)]
-    
-    data = []
-    for channel in channels:
-        logger.info(f'Processing channel: {channel.entity.title}')
-        full_channel = await client(GetFullChannelRequest(channel.entity))
-        channel_link = f"https://t.me/{channel.entity.username}" if channel.entity.username else "No public link"
-        followers = full_channel.full_chat.participants_count
-        chat_id = channel.entity.id
-        data.append((channel.entity.title, channel_link, followers, chat_id))
-    
-    data.sort()  # Sort by channel name
-
-    df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
-    df.to_csv(output_file, index=False)
-    logger.info(f'Data written to {output_file}')
-
-async def parse_file(input_file, output_file):
+async def fetch_ids(input_file, output_file):
     logger.info('Starting the client...')
     await client.start(phone)
     logger.info('Client started.')
