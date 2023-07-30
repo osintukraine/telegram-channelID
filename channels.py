@@ -2,6 +2,7 @@ import os
 import csv
 import argparse
 import pandas as pd
+import json
 from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 from telethon.tl.functions.channels import GetFullChannelRequest
@@ -41,7 +42,7 @@ logger.addHandler(handler)
 
 client = TelegramClient('session_name', api_id, api_hash)
 
-async def fetch_id(chat_id, output_file):
+async def fetch_id(chat_id):
     logger.info('Starting the client...')
     await client.start(phone)
     logger.info('Client started.')
@@ -52,14 +53,17 @@ async def fetch_id(chat_id, output_file):
         full_channel = await client(GetFullChannelRequest(channel_entity))
         followers = full_channel.full_chat.participants_count
         channel_link = f"https://t.me/{channel_entity.username}" if channel_entity.username else "No public link"
-        data = [(channel_entity.title, channel_link, followers, chat_id)]
+        data = {
+            "Channel Name": channel_entity.title,
+            "Channel Link": channel_link,
+            "Followers": followers,
+            "Chat ID": chat_id
+        }
     except ValueError:
         logger.error(f'Cannot find any entity corresponding to "{chat_id}". Skipping...')
-        data = []
+        data = {}
 
-    df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
-    df.to_csv(output_file, index=False)
-    logger.info(f'Data written to {output_file}')
+    print(json.dumps(data, indent=4))
 
 parser = argparse.ArgumentParser(description='Fetch Telegram channel IDs.')
 parser.add_argument('--mode', choices=['fetch', 'parse', 'ids', 'id'], required=True, help='The operation mode.')
@@ -82,4 +86,4 @@ with client:
     elif args.mode == 'id':
         if args.input is None:
             raise ValueError('The --input argument is required in id mode.')
-        client.loop.run_until_complete(fetch_id(int(args.input), args.output_file))
+        client.loop.run_until_complete(fetch_id(int(args.input)))
