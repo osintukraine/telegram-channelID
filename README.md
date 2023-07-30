@@ -6,7 +6,7 @@
 
 - python channels.py --mode fetch --output_file output_fetch.csv
 - python channels.py --mode parse --input_file input.csv --output_file output_parsed.csv
-- python opml.py --mode opml --input_file https://OPML-list-of-telegram-channels --output_file output.csv
+- python channels.py --mode opml --input_file https://OPML-list-of-telegram-channels --output_file output.csv
 
 
 
