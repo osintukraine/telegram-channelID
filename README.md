@@ -25,6 +25,8 @@
 
 ## load a local CSV file with missing ID's
 - run : python channels.py --mode parse --input_file input.csv --output_file output_parse.csv
+- your CSV file must contain at least a column with Channel_Link
+- if Channel_Name is also present the script will use it to infer the Chat ID, if not, it will use the Channel_link. 
 
 ## OPML use case mode
 this usecase is designed for a very specific situation, the use of Inoreader to aggregate Telegram channels

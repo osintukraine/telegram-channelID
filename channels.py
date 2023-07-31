@@ -81,6 +81,11 @@ async def fetch_channels(output_file):
     df.to_csv(output_file, index=False)
     logger.info(f'Data written to {output_file}')
 
+from telethon.errors import UsernameInvalidError
+
+from telethon.errors import FloodWaitError
+import time
+
 async def parse_file(input_file, output_file):
     logger.info('Starting the client...')
     await client.start(phone)
@@ -92,20 +97,32 @@ async def parse_file(input_file, output_file):
     data = []
     for _, row in input_df.iterrows():
         channel_link = row['Channel Link']
-        channel_name = row['Channel Name']
+        channel_name = row['Channel Name'] if pd.notnull(row['Channel Name']) else channel_link
         logger.info(f'Processing channel: {channel_name}')
         try:
-            channel_entity = await client.get_entity(channel_link)
+            try:
+                channel_entity = await client.get_entity(channel_link)
+            except (ValueError, UsernameInvalidError) as e:
+                logger.error(f'Failed to get entity for link "{channel_link}": {e}')
+                continue
             full_channel = await client(GetFullChannelRequest(channel_entity))
             followers = full_channel.full_chat.participants_count
             chat_id = channel_entity.id
+            # If channel name is empty in the CSV, fetch it from the Telegram API
+            if pd.isnull(row['Channel Name']):
+                channel_name = channel_entity.title
             data.append((channel_name, channel_link, followers, chat_id))
+        except FloodWaitError as e:
+            logger.error(f'Hit rate limit, sleeping for {e.seconds} seconds')
+            time.sleep(e.seconds)
+            continue
         except ValueError:
-            logger.error(f'Cannot find any entity corresponding to \"{channel_link}\". Skipping...')
+            logger.error(f'Cannot find any entity corresponding to "{channel_link}". Skipping...')
 
     df = pd.DataFrame(data, columns=["Channel Name", "Channel Link", "Followers", "Chat ID"])
     df.to_csv(output_file, index=False)
     logger.info(f'Data written to {output_file}')
+
 
 async def parse_opml(input_file, output_file):
     logger.info('Starting the client...')
