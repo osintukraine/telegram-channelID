@@ -1,6 +1,7 @@
-# telegram-channelID
+# Get Telegram Chat-ID
 - a python script to retrieve subscribed channel ID's from your telegram account and export the list to CSV
 - retrieve the channel ID's from a local CSV file with missing channel ID's
+- infer chat-id's from a OPML list of telegram channels
 
 ## TLDR
 
