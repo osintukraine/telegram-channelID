@@ -169,3 +169,5 @@ cython_debug/
 # session telegram
 
 *.session
+my_session.session
+my_session.session-journal
